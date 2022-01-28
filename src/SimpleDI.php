@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Otobio;
 
-use Closure,
-    ReflectionClass,
-    ReflectionMethod,
-    ReflectionException,
-    Exception;
+use Closure;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionException;
+use Exception;
 
 use Otobio\Exceptions\{
     BindingNotFoundException
@@ -16,11 +16,10 @@ use Otobio\Exceptions\{
 
 use Psr\Container\ContainerInterface;
 
-class SimpleDI implements ContainerInterface {
-
-    protected
-        $sharedInstances = [],
-        $bindings = [];
+class SimpleDI implements ContainerInterface
+{
+    protected $sharedInstances = [];
+    protected $bindings = [];
 
 
     public function getBinding(string $id)
@@ -29,8 +28,8 @@ class SimpleDI implements ContainerInterface {
             if (isset($this->bindings[$id])) {
                 $binding = $this->bindings[$id];
                 if (
-                    is_string($binding['concrete']) && 
-                    array_key_exists($binding['concrete'], $this->bindings) && 
+                    is_string($binding['concrete']) &&
+                    array_key_exists($binding['concrete'], $this->bindings) &&
                     $id !== $binding['concrete']
                 ) {
                     $id = $binding['concrete'];
@@ -64,7 +63,9 @@ class SimpleDI implements ContainerInterface {
         $this->clearResolved($id);
 
         $this->bindings[$id] = array_merge([
-            'concrete' => Closure::bind(function() use ($id) { return $id; }, null),
+            'concrete' => Closure::bind(function () use ($id) {
+                return $id;
+            }, null),
             'shared' => false,
             'parameters' => [],
         ], $configuration);
@@ -126,7 +127,7 @@ class SimpleDI implements ContainerInterface {
         $parameters = $constructor ? $this->getParams($constructor, $binding) : [];
 
         if (count($parameters)) {
-            return function() use ($reflectorClass, $parameters) {
+            return function () use ($reflectorClass, $parameters) {
                 return new $reflectorClass->name(...$parameters);
             };
         } else {
@@ -140,11 +141,11 @@ class SimpleDI implements ContainerInterface {
     {
         $resolvedParams = [];
 
-    	foreach ($method->getParameters() as $index => $parameter) {
+        foreach ($method->getParameters() as $index => $parameter) {
             if (array_key_exists($index, $binding['parameters']) || array_key_exists($parameter->getName(), $binding['parameters'])) {
                 $resolvedParam = $binding['parameters'][$index] ?? $binding['parameters'][$parameter->getName()];
             } else {
-    			$type = $parameter->getType();
+                $type = $parameter->getType();
                 $isBuiltIn = $type instanceof \ReflectionNamedType && $type->isBuiltIn();
                 if ($isBuiltIn || $parameter->isOptional()) {
                     $resolvedParam = $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
@@ -159,7 +160,7 @@ class SimpleDI implements ContainerInterface {
             } else {
                 $resolvedParams[] = $resolvedParam;
             }
-		}
+        }
 
         return $resolvedParams;
     }

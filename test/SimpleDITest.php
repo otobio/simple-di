@@ -8,18 +8,21 @@ use Otobio\Exceptions\BindingNotFoundException;
 require_once 'vendor/autoload.php';
 require_once 'TestClasses.php';
 
-class SimpleDITest extends \PHPUnit\Framework\TestCase {
-	protected $container;
+class SimpleDITest extends \PHPUnit\Framework\TestCase
+{
+    protected $container;
 
-	protected function setUp(): void {
-		parent::setUp();
-		$this->container = new \Otobio\SimpleDI();
-	}
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->container = new \Otobio\SimpleDI();
+    }
 
-	protected function tearDown(): void {
-		$this->container = null;
-		parent::tearDown();
-	}
+    protected function tearDown(): void
+    {
+        $this->container = null;
+        parent::tearDown();
+    }
 
     public function testBasicWithoutConcrete()
     {
@@ -80,36 +83,38 @@ class SimpleDITest extends \PHPUnit\Framework\TestCase {
         $this->assertInstanceOf(NoConstructor::class, $this->container->get(NoConstructor::class));
     }
 
-	public function testObjectGraphCreation() {
-		$a = $this->container->get('A');
-
-		$this->assertInstanceOf('B', $a->b);
-		$this->assertInstanceOf('c', $a->b->c);
-		$this->assertInstanceOf('D', $a->b->c->d);
-		$this->assertInstanceOf('E', $a->b->c->e);
-		$this->assertInstanceOf('F', $a->b->c->e->f);
-	}
-
-	public function testNotFoundDependency()
+    public function testObjectGraphCreation()
     {
-		$this->expectException(BindingNotFoundException::class);
+        $a = $this->container->get('A');
+
+        $this->assertInstanceOf('B', $a->b);
+        $this->assertInstanceOf('c', $a->b->c);
+        $this->assertInstanceOf('D', $a->b->c->d);
+        $this->assertInstanceOf('E', $a->b->c->e);
+        $this->assertInstanceOf('F', $a->b->c->e->f);
+    }
+
+    public function testNotFoundDependency()
+    {
+        $this->expectException(BindingNotFoundException::class);
         $this->container->get('GeoThermalEnergyUnderYourHouse');
-	}
+    }
 
-	public function testUnInstantiableDependency()
+    public function testUnInstantiableDependency()
     {
-		$this->expectException(BindingNotFoundException::class);
+        $this->expectException(BindingNotFoundException::class);
         $this->container->get(InterfaceTest::class);
-	}
+    }
 
-	public function testOptionalInterface()
+    public function testOptionalInterface()
     {
-		$optionalInterface = $this->container->get(OptionalInterface::class);
-		$this->assertEquals(null, $optionalInterface->obj);
-	}
+        $optionalInterface = $this->container->get(OptionalInterface::class);
+        $this->assertEquals(null, $optionalInterface->obj);
+    }
 
-	public function testConstructParameters() {
-		$this->container->add(RequiresConstructorArgsB::class, [
+    public function testConstructParameters()
+    {
+        $this->container->add(RequiresConstructorArgsB::class, [
             'concrete' => RequiresConstructorArgsB::class,
             'parameters' => [
                 'foo' => 'y-foo',
@@ -117,9 +122,9 @@ class SimpleDITest extends \PHPUnit\Framework\TestCase {
             ]
         ]);
 
-		$obj = $this->container->get(RequiresConstructorArgsB::class);
+        $obj = $this->container->get(RequiresConstructorArgsB::class);
 
-		$this->assertEquals($obj->foo, 'y-foo');
-		$this->assertEquals($obj->bar, 'z-bar');
-	}
+        $this->assertEquals($obj->foo, 'y-foo');
+        $this->assertEquals($obj->bar, 'z-bar');
+    }
 }
