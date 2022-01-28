@@ -48,3 +48,11 @@ interface InterfaceTest {}
 class InterfaceTestClass implements interfaceTest {
 
 }
+
+class OptionalInterface {
+	public $obj;
+
+	public function __construct(InterfaceTest $obj = null) {
+		$this->obj = $obj;
+	}
+}

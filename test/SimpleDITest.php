@@ -90,16 +90,21 @@ class SimpleDITest extends \PHPUnit\Framework\TestCase {
 		$this->assertInstanceOf('F', $a->b->c->e->f);
 	}
 
-	public function testNotFoundDependency() 
+	public function testNotFoundDependency()
     {
 		$this->expectException(BindingNotFoundException::class);
         $this->container->get('GeoThermalEnergyUnderYourHouse');
 	}
 
-	public function testUnInstantiableDependency() 
+	public function testUnInstantiableDependency()
     {
 		$this->expectException(BindingNotFoundException::class);
         $this->container->get(InterfaceTest::class);
-	}    
+	}
 
+	public function testOptionalInterface()
+    {
+		$optionalInterface = $this->container->get(OptionalInterface::class);
+		$this->assertEquals(null, $optionalInterface->obj);
+	}
 }

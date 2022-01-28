@@ -142,7 +142,7 @@ class SimpleDI implements ContainerInterface {
             } else {
     			$type = $parameter->getType();
                 $isBuiltIn = $type instanceof \ReflectionNamedType && $type->isBuiltIn();
-                if ($isBuiltIn) {
+                if ($isBuiltIn || $parameter->isOptional()) {
                     $resolvedParam = $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
                 } else {
                     $resolvedParam = $this->resolve($type->getName());
