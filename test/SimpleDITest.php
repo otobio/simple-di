@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
+use Otobio\Exceptions\BindingNotFoundException;
 
 require_once 'vendor/autoload.php';
 require_once 'Basic.php';
@@ -88,5 +89,17 @@ class SimpleDITest extends \PHPUnit\Framework\TestCase {
 		$this->assertInstanceOf('E', $a->b->c->e);
 		$this->assertInstanceOf('F', $a->b->c->e->f);
 	}
+
+	public function testNotFoundDependency() 
+    {
+		$this->expectException(BindingNotFoundException::class);
+        $this->container->get('GeoThermalEnergyUnderYourHouse');
+	}
+
+	public function testUnInstantiableDependency() 
+    {
+		$this->expectException(BindingNotFoundException::class);
+        $this->container->get(InterfaceTest::class);
+	}    
 
 }

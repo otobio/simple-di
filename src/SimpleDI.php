@@ -10,6 +10,10 @@ use Closure,
     ReflectionException,
     Exception;
 
+use Otobio\Exceptions\{
+    BindingNotFoundException
+};
+
 use Psr\Container\ContainerInterface;
 
 class SimpleDI implements ContainerInterface {
@@ -80,13 +84,13 @@ class SimpleDI implements ContainerInterface {
             return $this->sharedInstances[$id];
         }
 
-        $ret = $this->getClosure($id)($this);
+        $output = $this->getClosure($id)($this);
 
         if ($this->isShared($id)) {
-            $this->sharedInstances[$id] = $ret;
+            $this->sharedInstances[$id] = $output;
         }
 
-        return $ret;
+        return $output;
     }
 
     protected function getClosure(string $id)
@@ -107,15 +111,11 @@ class SimpleDI implements ContainerInterface {
         try {
             $reflectorClass = new ReflectionClass($binding['concrete']);
         } catch (ReflectionException $exc) {
-            return function () use ($binding) {
-                return new Exception("Class {$binding['concrete']} does not exist");
-            };
+            throw new BindingNotFoundException("Class {$binding['concrete']} does not exist");
         }
 
         if (!$reflectorClass->isInstantiable()) {
-            return function () use ($binding) {
-                return new Exception("Cannot instantiate {$binding['concrete']}.");
-            };
+            throw new BindingNotFoundException("Instance of {$binding['concrete']} cannot be done, because {$binding['concrete']} is not instantiable");
         }
 
         $constructor = $reflectorClass->getConstructor();
