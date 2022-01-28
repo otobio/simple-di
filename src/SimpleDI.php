@@ -9,11 +9,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use ReflectionException;
 use Exception;
-
-use Otobio\Exceptions\{
-    BindingNotFoundException
-};
-
+use Otobio\Exceptions\BindingNotFoundException;
 use Psr\Container\ContainerInterface;
 
 class SimpleDI implements ContainerInterface
@@ -21,8 +17,7 @@ class SimpleDI implements ContainerInterface
     protected $sharedInstances = [];
     protected $bindings = [];
 
-
-    public function getBinding(string $id)
+    protected function getBinding(string $id)
     {
         while (true) {
             if (isset($this->bindings[$id])) {
@@ -49,41 +44,7 @@ class SimpleDI implements ContainerInterface
         return isset($binding) && $binding['shared'] === true;
     }
 
-
-    protected function clearResolved(string $id)
-    {
-        unset(
-            $this->bindings[$id],
-            $this->sharedInstances[$id]
-        );
-    }
-
-    public function add(string $id, array $configuration = [])
-    {
-        $this->clearResolved($id);
-
-        $this->bindings[$id] = array_merge([
-            'concrete' => Closure::bind(function () use ($id) {
-                return $id;
-            }, null),
-            'shared' => false,
-            'parameters' => [],
-        ], $configuration);
-
-        return $this;
-    }
-
-    public function get(string $id)
-    {
-        return $this->resolve($id);
-    }
-
-    public function has(string $id): bool
-    {
-        return (bool) $this->getBinding($id);
-    }
-
-    public function resolve(string $id)
+    protected function resolve(string $id)
     {
         if (isset($this->sharedInstances[$id])) {
             return $this->sharedInstances[$id];
@@ -137,7 +98,7 @@ class SimpleDI implements ContainerInterface
         }
     }
 
-    public function getParams(ReflectionMethod $method, array $binding): array
+    protected function getParams(ReflectionMethod $method, array $binding): array
     {
         $resolvedParams = [];
 
@@ -163,5 +124,33 @@ class SimpleDI implements ContainerInterface
         }
 
         return $resolvedParams;
+    }
+
+    public function add(string $id, array $configuration = [])
+    {
+        unset(
+            $this->bindings[$id],
+            $this->sharedInstances[$id]
+        );
+
+        $this->bindings[$id] = array_merge([
+            'concrete' => Closure::bind(function () use ($id) {
+                return $id;
+            }, null),
+            'shared' => false,
+            'parameters' => [],
+        ], $configuration);
+
+        return $this;
+    }
+
+    public function get(string $id)
+    {
+        return $this->resolve($id);
+    }
+
+    public function has(string $id): bool
+    {
+        return (bool) $this->getBinding($id);
     }
 }
