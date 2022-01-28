@@ -1,0 +1,20 @@
+{
+    "name": "otobio/simple-di",
+    "description": "Simple Dependency Injector",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Ojutiku Oluwatobi",
+            "email": "ojutiku.oluwatobi@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"Otobio\\": "src"}
+    },    
+    "require": {
+        "psr/container": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    }
+}
