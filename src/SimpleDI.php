@@ -28,7 +28,11 @@ class SimpleDI implements ContainerInterface {
         while (true) {
             if (isset($this->bindings[$id])) {
                 $binding = $this->bindings[$id];
-                if (is_string($binding['concrete']) && array_key_exists($binding['concrete'], $this->bindings)) {
+                if (
+                    is_string($binding['concrete']) && 
+                    array_key_exists($binding['concrete'], $this->bindings) && 
+                    $id !== $binding['concrete']
+                ) {
                     $id = $binding['concrete'];
                     continue;
                 }

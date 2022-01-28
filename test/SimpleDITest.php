@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Otobio\Exceptions\BindingNotFoundException;
 
 require_once 'vendor/autoload.php';
-require_once 'Basic.php';
+require_once 'TestClasses.php';
 
 class SimpleDITest extends \PHPUnit\Framework\TestCase {
 	protected $container;
@@ -106,5 +106,20 @@ class SimpleDITest extends \PHPUnit\Framework\TestCase {
     {
 		$optionalInterface = $this->container->get(OptionalInterface::class);
 		$this->assertEquals(null, $optionalInterface->obj);
+	}
+
+	public function testConstructParameters() {
+		$this->container->add(RequiresConstructorArgsB::class, [
+            'concrete' => RequiresConstructorArgsB::class,
+            'parameters' => [
+                'foo' => 'y-foo',
+                'bar' => 'z-bar'
+            ]
+        ]);
+
+		$obj = $this->container->get(RequiresConstructorArgsB::class);
+
+		$this->assertEquals($obj->foo, 'y-foo');
+		$this->assertEquals($obj->bar, 'z-bar');
 	}
 }
