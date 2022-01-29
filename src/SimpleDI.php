@@ -8,7 +8,6 @@ use Closure;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionException;
-use Exception;
 use Otobio\Exceptions\BindingNotFoundException;
 use Psr\Container\ContainerInterface;
 
@@ -85,45 +84,59 @@ class SimpleDI implements ContainerInterface
         }
 
         $constructor = $reflectorClass->getConstructor();
-        $parameters = $constructor ? $this->getParams($constructor, $binding) : [];
 
-        if (count($parameters)) {
-            return function () use ($reflectorClass, $parameters) {
-                return new $reflectorClass->name(...$parameters);
+        if ($constructor && count($constructor->getParameters())) {
+            $closure = function ($container) use ($reflectorClass, $constructor, $binding) {
+                return new $reflectorClass->name(...$container->getParams($constructor, $binding)($container));
             };
         } else {
-            return function () use ($reflectorClass) {
+            $closure = function () use ($reflectorClass) {
                 return new $reflectorClass->name;
             };
         }
+
+        $closure = Closure::bind($closure, null);
+
+        // Future Improvement: Provide container option to save resolved configurations
+        if ($this->has($id) && !$this->isShared($id)) {
+            $binding['concrete'] = $closure;
+            $this->add($id, $binding);
+        }
+
+        return $closure;
     }
 
-    protected function getParams(ReflectionMethod $method, array $binding): array
+    protected function getParams(ReflectionMethod $method, array $binding): Closure
     {
-        $resolvedParams = [];
+        $parameters = $method->getParameters();
+        $overrideParameters = $binding['parameters'];
 
-        foreach ($method->getParameters() as $index => $parameter) {
-            if (array_key_exists($index, $binding['parameters']) || array_key_exists($parameter->getName(), $binding['parameters'])) {
-                $resolvedParam = $binding['parameters'][$index] ?? $binding['parameters'][$parameter->getName()];
-            } else {
-                $type = $parameter->getType();
-                $isBuiltIn = $type instanceof \ReflectionNamedType && $type->isBuiltIn();
-                if ($isBuiltIn || $parameter->isOptional()) {
-                    $resolvedParam = $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
+        return Closure::bind(function ($container) use ($parameters, $overrideParameters) {
+            $resolvedParams = [];
+
+            foreach ($parameters as $index => $parameter) {
+                if (array_key_exists($index, $overrideParameters) || array_key_exists($parameter->getName(), $overrideParameters)) {
+                    $resolvedParam = $overrideParameters[$index] ?? $overrideParameters[$parameter->getName()];
                 } else {
-                    $resolvedParam = $this->resolve($type->getName());
+                    $type = $parameter->getType();
+                    $isBuiltIn = $type instanceof \ReflectionNamedType && $type->isBuiltIn();
+                    if ($isBuiltIn || $parameter->isOptional()) {
+                        $resolvedParam = $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
+                    } else {
+                        $resolvedParam = $container->resolve($type->getName());
+                    }
+                }
+
+                if ($parameter->isVariadic()) {
+                    $resolvedParams[] = [$result];
+                    break;
+                } else {
+                    $resolvedParams[] = $resolvedParam;
                 }
             }
 
-            if ($parameter->isVariadic()) {
-                $resolvedParams[] = [$result];
-                break;
-            } else {
-                $resolvedParams[] = $resolvedParam;
-            }
-        }
-
-        return $resolvedParams;
+            return $resolvedParams;
+        }, null);
     }
 
     public function add(string $id, array $configuration = [])
